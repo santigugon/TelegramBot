@@ -1,31 +1,38 @@
 "use client";
 import React, { useEffect, useState } from "react";
-let tele = null;
-if (
-  typeof window !== "undefined" &&
-  window.Telegram &&
-  window.Telegram.WebApp
-) {
-  tele = window.Telegram.WebApp;
-} else {
-  console.error("Telegram WebApp is not available.");
-}
 
 const WebApp = () => {
+  const [tele, setTele] = useState(null);
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    if (window.TelegramWebApp) {
-      tele.ready();
+    // Ensure Telegram WebApp is available
+    if (
+      typeof window !== "undefined" &&
+      window.Telegram &&
+      window.Telegram.WebApp
+    ) {
+      const telegramWebApp = window.Telegram.WebApp;
+      setTele(telegramWebApp);
 
-      // Access user data from Telegram Web App SDK
-      const userData = window.TelegramWebApp.initDataUnsafe;
-      setUser(userData);
+      // Initialize the WebApp
+      telegramWebApp.ready();
 
-      // Customize appearance (e.g., header color)
-      tele.setHeaderColor("#FF5733"); // Set custom header color
+      // Access user data correctly
+      setUser(telegramWebApp.initDataUnsafe?.user || {});
+
+      // Customize appearance
+      telegramWebApp.setHeaderColor("#FF5733");
+    } else {
+      console.error("Telegram WebApp is not available.");
     }
   }, []);
+
+  const handleCloseApp = () => {
+    if (tele) {
+      tele.close();
+    }
+  };
 
   return (
     <div style={{ textAlign: "center", padding: "20px" }}>
@@ -38,7 +45,7 @@ const WebApp = () => {
       ) : (
         <p>Loading user data...</p>
       )}
-      <button onClick={() => tele.close()}>Close App</button>
+      <button onClick={handleCloseApp}>Close App</button>
     </div>
   );
 };
