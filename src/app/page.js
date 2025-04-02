@@ -1,9 +1,18 @@
 "use client";
 import React, { useEffect, useState } from "react";
+let tele = null;
+if (
+  typeof window !== "undefined" &&
+  window.Telegram &&
+  window.Telegram.WebApp
+) {
+  tele = window.Telegram.WebApp;
+} else {
+  console.error("Telegram WebApp is not available.");
+}
 
 const WebApp = () => {
   const [user, setUser] = useState(null);
-  const tele = window.Telegram.WebApp;
 
   useEffect(() => {
     if (window.TelegramWebApp) {
