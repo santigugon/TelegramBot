@@ -3,17 +3,18 @@ import React, { useEffect, useState } from "react";
 
 const WebApp = () => {
   const [user, setUser] = useState(null);
+  const tele = window.Telegram.WebApp;
 
   useEffect(() => {
     if (window.TelegramWebApp) {
-      window.TelegramWebApp.ready();
+      tele.ready();
 
       // Access user data from Telegram Web App SDK
       const userData = window.TelegramWebApp.initDataUnsafe;
       setUser(userData);
 
       // Customize appearance (e.g., header color)
-      window.TelegramWebApp.setHeaderColor("#FF5733"); // Set custom header color
+      tele.setHeaderColor("#FF5733"); // Set custom header color
     }
   }, []);
 
@@ -28,7 +29,7 @@ const WebApp = () => {
       ) : (
         <p>Loading user data...</p>
       )}
-      <button onClick={() => window.TelegramWebApp.close()}>Close App</button>
+      <button onClick={() => tele.close()}>Close App</button>
     </div>
   );
 };
