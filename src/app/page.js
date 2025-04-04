@@ -96,7 +96,7 @@ const OracleTaskManager = () => {
   // GENERAL DATA
   const [modules, setModules] = useState([]);
   const [initialTasks, setInitialTasks] = useState([]);
-  const [userData, setUser] = useState(null);
+  const [user, setUser] = useState(null);
 
   const userData = window.TelegramWebApp.initDataUnsafe;
   setUser(userData);
