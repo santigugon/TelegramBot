@@ -441,7 +441,8 @@ const OracleTaskManager = () => {
           filteredTasks.map((task) => (
             <div key={task.id} className="task-card">
               <div className="task-header">
-                <h3>{task.title}</h3>
+                {/* TO DO */}
+                <h3>{task.description}</h3>
                 <div className="task-actions">
                   <button
                     className="icon-button edit"

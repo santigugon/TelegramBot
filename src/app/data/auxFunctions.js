@@ -4,6 +4,9 @@ export const getFromAPI = async (endpoint) => {
       `${process.env.NEXT_PUBLIC_FRONT_END_URL}/${endpoint}`,
       {
         method: "GET",
+        headers: {
+          "ngrok-skip-browser-warning": "true", // Add this header to skip the warning page
+        },
       }
     );
 
