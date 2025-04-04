@@ -98,8 +98,6 @@ const OracleTaskManager = () => {
   const [initialTasks, setInitialTasks] = useState([]);
   const [user, setUser] = useState(null);
 
-  const userData = window.TelegramWebApp.initDataUnsafe;
-  setUser(userData);
   const [loading, setLoading] = useState(true);
 
   const [tele, setTele] = useState(null);
@@ -165,6 +163,8 @@ const OracleTaskManager = () => {
       if (savedTasks) {
         setTasks(JSON.parse(savedTasks));
       }
+      const userData = window.TelegramWebApp.initDataUnsafe;
+      setUser(userData);
       fetchData();
     }
   }, []);
