@@ -96,11 +96,14 @@ const OracleTaskManager = () => {
   // GENERAL DATA
   const [modules, setModules] = useState([]);
   const [initialTasks, setInitialTasks] = useState([]);
+  const [userData, setUser] = useState(null);
 
+  const userData = window.TelegramWebApp.initDataUnsafe;
+  setUser(userData);
   const [loading, setLoading] = useState(true);
 
   const [tele, setTele] = useState(null);
-  const [user, setUser] = useState(null);
+
   const [tasks, setTasks] = useState([]);
   const [activeTeamId, setActiveTeamId] = useState(null);
   const [activeModuleId, setActiveModuleId] = useState(null);
@@ -772,7 +775,14 @@ const OracleTaskManager = () => {
             </div>
           </header>
 
-          <main className="app-content">{renderContent()}</main>
+          <main className="app-content">
+            <div className="flex flex-col">
+              <div className="user-info">
+                <h2>Welcome: {user && JSON.stringify(user, null, 2)}</h2>
+              </div>
+              {renderContent()}
+            </div>
+          </main>
           <nav className="app-nav">
             <button
               className={`nav-button ${view === "tasks" ? "active" : ""}`}
