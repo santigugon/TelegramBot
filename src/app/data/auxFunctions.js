@@ -62,3 +62,27 @@ export const deleteFromAPI = async (endpoint) => {
     throw error;
   }
 };
+
+export const putFromAPI = async (endpoint, data) => {
+  try {
+    console.log("PUT request endpoint:", endpoint);
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_FRONT_END_URL}/${endpoint}`,
+      {
+        method: "PUT",
+        headers: {
+          "ngrok-skip-browser-warning": "true", // Add this header to skip the warning page
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      }
+    );
+
+    const result = await response.json();
+    console.log("API response:", result);
+    return result;
+  } catch (error) {
+    console.error("Error putting data:", error);
+    throw error;
+  }
+};

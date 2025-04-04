@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import Script from "next/script";
 import "./globals.css";
 import { getModules } from "@/app/data/modules";
-import { getTasks, postTask, deleteTask } from "@/app/data/task";
+import { getTasks, postTask, deleteTask, putTask } from "@/app/data/task";
 import { getTeams } from "@/app/data/teams";
 import OracleLoader from "@/app/loader";
 // Oracle color palette
@@ -208,17 +208,19 @@ const OracleTaskManager = () => {
     }
   };
 
-  const handleUpdateTask = () => {
+  const handleUpdateTask = async () => {
     if (!editingTask) return;
 
     const updatedTasks = tasks.map((task) =>
       task.id === editingTask.id ? editingTask : task
     );
-
-    setTasks(updatedTasks);
-    setEditingTask(null);
-    setView("tasks");
-
+    let result = await putTask(editingTask.id, editingTask);
+    console.log("result", result);
+    if (result) {
+      setTasks(updatedTasks);
+      setEditingTask(null);
+      setView("tasks");
+    }
     // Show success message
     if (tele) {
       tele.showPopup({
@@ -242,6 +244,20 @@ const OracleTaskManager = () => {
         setTasks(filteredTasks);
       }
     }
+  };
+
+  const handleTaskCompletion = async (taskId) => {
+    const updatedTasks = tasks.map((task) =>
+      task.id === taskId ? { ...task, done: !task.done } : task
+    );
+    const taskToUpdate = updatedTasks.find((task) => task.id === taskId);
+    const result = await putTask(taskId, taskToUpdate);
+    console.log("result of completing task", result);
+    if (result) {
+      setTasks(updatedTasks);
+    }
+    setEditingTask(null);
+    // Show success message
   };
 
   const getTeamById = (id) => {
@@ -301,6 +317,14 @@ const OracleTaskManager = () => {
     }
   };
 
+  const findUserById = (id) => {
+    return (
+      users.find((user) => user.id === id) || {
+        username: "Unknown User",
+      }
+    );
+  };
+
   const renderTaskForm = ({ isEditing = false }) => {
     const formTask = isEditing ? editingTask : newTask;
     const setFormTask = isEditing ? setEditingTask : setNewTask;
@@ -336,7 +360,7 @@ const OracleTaskManager = () => {
               setFormTask({ ...formTask, description: e.target.value })
             }
             placeholder="Task description"
-            className="w-full p-2 border border-gray-300 rounded-md"
+            className="w-full p-10 border border-gray-300 rounded-md"
             rows="3"
           />
         </div>
@@ -426,11 +450,11 @@ const OracleTaskManager = () => {
               Story Points
             </label>
             <select
-              value={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
+              value={formTask.story_Points} // Use a single value here, not an array
               onChange={(e) =>
                 setFormTask({
                   ...formTask,
-                  story_Points: Number(e.target.value),
+                  story_Points: Number(e.target.value), // Set the selected value
                 })
               }
               className="w-full p-2 border border-gray-300 rounded-md"
@@ -443,9 +467,9 @@ const OracleTaskManager = () => {
             </select>
           </div>
 
-          <div className="mb-4">
+          <div className="mb-4 flex flex-col justify-around">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Done
+              Done?
             </label>
             <div className="flex items-center justify-start mt-2">
               <input
@@ -592,40 +616,57 @@ const OracleTaskManager = () => {
                 </div>
               </div>
 
-              <div className="task-details">
-                <div className="task-module">
-                  <span className="label">Module:</span>
-                  <span>{getModuleById(task.moduleId).title}</span>
+              <div className="flex justify-between items-center">
+                <div className="task-details">
+                  <div className="task-module">
+                    <span className="label">Module:</span>
+                    <span>{getModuleById(task.moduleId).title}</span>
+                  </div>
+
+                  <div className="task-meta">
+                    <span
+                      className="team-badge"
+                      style={{
+                        backgroundColor: getTeamById(task.teamId).color,
+                      }}
+                    >
+                      {getTeamById(task.teamId).name}
+                    </span>
+
+                    <span
+                      className="status-badge"
+                      style={getStatusBadgeStyle(task.done)}
+                    >
+                      {task.done ? "Done" : "To do"}
+                    </span>
+
+                    <span
+                      className="priority-badge"
+                      style={{
+                        backgroundColor: "transparent",
+                        color: getPriorityColor(task.story_Points),
+                        border: `1px solid ${getPriorityColor(
+                          task.story_Points
+                        )}`,
+                      }}
+                    >
+                      {task.story_Points} Story points
+                    </span>
+
+                    <span className="status-badge" style={{ color: "purple" }}>
+                      Responsible:{" "}
+                      {findUserById(task.responsible).user.username}
+                    </span>
+                  </div>
                 </div>
-
-                <div className="task-meta">
-                  <span
-                    className="team-badge"
-                    style={{ backgroundColor: getTeamById(task.teamId).color }}
-                  >
-                    {getTeamById(task.teamId).name}
-                  </span>
-
-                  <span
-                    className="status-badge"
-                    style={getStatusBadgeStyle(task.done)}
-                  >
-                    {task.done ? "Done" : "To do"}
-                  </span>
-
-                  <span
-                    className="priority-badge"
-                    style={{
-                      backgroundColor: "transparent",
-                      color: getPriorityColor(task.story_Points),
-                      border: `1px solid ${getPriorityColor(
-                        task.story_Points
-                      )}`,
-                    }}
-                  >
-                    {task.story_Points} Story points
-                  </span>
-                </div>
+                <input
+                  type="checkbox"
+                  className="fitted-checkbox"
+                  checked={task.done}
+                  onChange={() => {
+                    handleTaskCompletion(task.id);
+                  }}
+                ></input>
               </div>
             </div>
           ))
