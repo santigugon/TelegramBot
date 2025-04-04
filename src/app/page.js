@@ -346,8 +346,6 @@ const OracleTaskManager = () => {
             {isEditing ? "Update Task" : "Create Task"}
           </button>
         </div>
-        <h1>Data from Oracle Database:</h1>
-        <pre>{JSON.stringify(data, null, 2)}</pre>
       </div>
     );
   };
