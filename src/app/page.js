@@ -3,11 +3,73 @@ import React, { useState, useEffect } from "react";
 import Script from "next/script";
 import "./globals.css";
 import { getModules } from "@/app/data/modules";
-import { getTasks } from "@/app/data/task";
+import { getTasks, postTask, deleteTask } from "@/app/data/task";
 import { getTeams } from "@/app/data/teams";
 import OracleLoader from "@/app/loader";
-
 // Oracle color palette
+
+const users = [
+  {
+    id: 1,
+    userId: 1,
+    teamId: 1,
+    role: "Manager",
+    createdAt: "2025-02-27T16:00:00.000+00:00",
+    user: {
+      id: 1,
+      username: "Julián Enrique Espinoza Valenzuela",
+      email: "A01254679@tec.mx",
+    },
+  },
+  {
+    id: 2,
+    userId: 2,
+    teamId: 1,
+    role: "Developer",
+    createdAt: "2025-02-27T16:05:00.000+00:00",
+    user: {
+      id: 2,
+      username: "Santiago Gutiérrez González",
+      email: "A00572499@tec.mx",
+    },
+  },
+  {
+    id: 3,
+    userId: 3,
+    teamId: 1,
+    role: "Developer",
+    createdAt: "2025-02-27T16:10:00.000+00:00",
+    user: {
+      id: 3,
+      username: "Alejandro Moncada Espinosa",
+      email: "A01638343@tec.mx",
+    },
+  },
+  {
+    id: 4,
+    userId: 4,
+    teamId: 1,
+    role: "Developer",
+    createdAt: "2025-02-27T16:15:00.000+00:00",
+    user: {
+      id: 4,
+      username: "Ana Camila Jimenez Mendoza",
+      email: "A01174422@tec.mx",
+    },
+  },
+  {
+    id: 5,
+    userId: 5,
+    teamId: 1,
+    role: "Developer",
+    createdAt: "2025-02-27T16:20:00.000+00:00",
+    user: {
+      id: 5,
+      username: "Jorge Ivan Sanchez Gonzalez",
+      email: "A01761414@tec.mx",
+    },
+  },
+];
 
 const colors = {
   primary: "#C74634", // Oracle Red
@@ -118,6 +180,9 @@ const OracleTaskManager = () => {
   const handleCreateTask = () => {
     if (!newTask.title) return;
 
+    postTask(newTask);
+
+    // To do
     const taskToAdd = {
       ...newTask,
       id: getNextId(),
@@ -164,31 +229,15 @@ const OracleTaskManager = () => {
     }
   };
 
-  const handleDeleteTask = (taskId) => {
+  const handleDeleteTask = async (taskId) => {
     const taskToDelete = tasks.find((task) => task.id === taskId);
 
-    if (tele) {
-      tele.showConfirm(
-        `Are you sure you want to delete "${taskToDelete.title}"?`,
-        (confirmed) => {
-          if (confirmed) {
-            const filteredTasks = tasks.filter((task) => task.id !== taskId);
-            setTasks(filteredTasks);
-
-            tele.showPopup({
-              title: "Task Deleted",
-              message: `Task "${taskToDelete.title}" has been deleted.`,
-              buttons: [{ type: "ok" }],
-            });
-          }
-        }
-      );
-    } else {
-      if (
-        window.confirm(
-          `Are you sure you want to delete "${taskToDelete.title}"?`
-        )
-      ) {
+    if (
+      window.confirm(`Are you sure you want to delete "${taskToDelete.title}"?`)
+    ) {
+      let deletedTask = await deleteTask(taskId);
+      console.log("deletedTask", deletedTask);
+      if (deletedTask) {
         const filteredTasks = tasks.filter((task) => task.id !== taskId);
         setTasks(filteredTasks);
       }
@@ -252,98 +301,181 @@ const OracleTaskManager = () => {
     }
   };
 
-  const renderTaskForm = (isEditing = false) => {
+  const renderTaskForm = ({ isEditing = false }) => {
     const formTask = isEditing ? editingTask : newTask;
     const setFormTask = isEditing ? setEditingTask : setNewTask;
 
     return (
-      <div className="task-form">
-        <h2 className="form-title">
+      <div className="bg-white p-20 rounded-lg  padding-20 border-rad-10 gap-5 flex flex-col">
+        <h2 className="text-xl font-semibold mb-4 text-gray-800">
           {isEditing ? "Edit Task" : "Create New Task"}
         </h2>
 
-        <div className="form-group">
-          <label>Title</label>
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Title
+          </label>
           <input
             type="text"
-            value={formTask.title}
+            value={formTask.title || ""}
             onChange={(e) =>
               setFormTask({ ...formTask, title: e.target.value })
             }
             placeholder="Task title"
+            className="w-full p-2 border border-gray-300 rounded-md"
           />
         </div>
 
-        <div className="form-group">
-          <label>Module</label>
-          <select
-            value={formTask.moduleId}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Description
+          </label>
+          <textarea
+            value={formTask.description || ""}
             onChange={(e) =>
-              setFormTask({ ...formTask, moduleId: Number(e.target.value) })
+              setFormTask({ ...formTask, description: e.target.value })
             }
-          >
-            {modules.map((module) => (
-              <option key={module.id} value={module.id}>
-                {module.title}
-              </option>
-            ))}
-          </select>
+            placeholder="Task description"
+            className="w-full p-2 border border-gray-300 rounded-md"
+            rows="3"
+          />
         </div>
 
-        <div className="form-group">
-          <label>Team</label>
-          <select
-            value={formTask.teamId}
-            onChange={(e) =>
-              setFormTask({ ...formTask, teamId: Number(e.target.value) })
-            }
-          >
-            {teams.map((team) => (
-              <option key={team.id} value={team.id}>
-                {team.name}
-              </option>
-            ))}
-          </select>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Module
+            </label>
+            <select
+              value={formTask.moduleId || ""}
+              onChange={(e) =>
+                setFormTask({ ...formTask, moduleId: Number(e.target.value) })
+              }
+              className="w-full p-2 border border-gray-300 rounded-md"
+            >
+              <option value="">Select Module</option>
+              {modules.map((module) => (
+                <option key={module.id} value={module.id}>
+                  {module.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Responsible
+            </label>
+            <select
+              value={formTask.responsible || ""}
+              onChange={(e) =>
+                setFormTask({
+                  ...formTask,
+                  responsible: Number(e.target.value),
+                })
+              }
+              className="w-full p-2 border border-gray-300 rounded-md"
+            >
+              <option value="">Select Responsible</option>
+              {users &&
+                users.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.user.username || user.user.email}
+                  </option>
+                ))}
+            </select>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Date Limit
+            </label>
+            <input
+              type="date"
+              value={formTask.dateLimit || ""}
+              onChange={(e) =>
+                setFormTask({ ...formTask, dateLimit: e.target.value })
+              }
+              className="w-full p-2 border border-gray-300 rounded-md"
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Estimated Time (hours)
+            </label>
+            <input
+              type="number"
+              min="0"
+              max="4"
+              step="0.5"
+              value={formTask.estimatedTime || 0}
+              onChange={(e) =>
+                setFormTask({
+                  ...formTask,
+                  estimatedTime: Number(e.target.value),
+                })
+              }
+              className="w-full p-2 border border-gray-300 rounded-md"
+            />
+            <small className="text-gray-500">Maximum: 4 hours</small>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Story Points
+            </label>
+            <select
+              value={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
+              onChange={(e) =>
+                setFormTask({
+                  ...formTask,
+                  story_Points: Number(e.target.value),
+                })
+              }
+              className="w-full p-2 border border-gray-300 rounded-md"
+            >
+              {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((point) => (
+                <option key={point} value={point}>
+                  {point}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Done
+            </label>
+            <div className="flex items-center justify-start mt-2">
+              <input
+                type="checkbox"
+                checked={formTask.done || false}
+                onChange={(e) =>
+                  setFormTask({ ...formTask, done: e.target.checked })
+                }
+                className="fitted-checkbox"
+              />
+              <span className="ml-2 text-sm text-gray-700">
+                Mark as completed
+              </span>
+            </div>
+          </div>
         </div>
 
-        <div className="form-group">
-          <label>Status</label>
-          <select
-            value={formTask.status}
-            onChange={(e) =>
-              setFormTask({ ...formTask, status: e.target.value })
-            }
-          >
-            <option value="To Do">To Do</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Done">Done</option>
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label>Priority</label>
-          <select
-            value={formTask.priority}
-            onChange={(e) =>
-              setFormTask({ ...formTask, priority: e.target.value })
-            }
-          >
-            <option value="Low">Low</option>
-            <option value="Medium">Medium</option>
-            <option value="High">High</option>
-          </select>
-        </div>
-
-        <div className="form-actions">
-          <button className="button secondary" onClick={() => setView("tasks")}>
-            Cancel
-          </button>
+        <div className="flex justify-around space-x-4 mt-6">
           <button
             className="button primary"
             onClick={isEditing ? handleUpdateTask : handleCreateTask}
-            disabled={!formTask.title}
+            disabled={!formTask.description}
           >
             {isEditing ? "Update Task" : "Create Task"}
+          </button>
+          <button
+            className="px-10 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 button"
+            onClick={() => setView("tasks")}
+          >
+            Cancel
           </button>
         </div>
       </div>

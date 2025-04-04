@@ -329,3 +329,21 @@ select:focus {
   font-size: 12px;
   color: var(--color-gray);
 }
+
+.padding-20 {
+  padding: 20px;
+}
+
+.border-rad-10 {
+  border-radius: 5%;
+  border: #c745343f 1px solid;
+}
+
+.fitted-checkbox {
+  width: 20px !important;
+  height: 20px;
+  border-radius: 5%;
+  margin-right: 15px !important;
+  margin-left: 3px !important;
+  border: #c745343f 1px solid;
+}

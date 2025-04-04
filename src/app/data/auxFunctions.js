@@ -18,3 +18,47 @@ export const getFromAPI = async (endpoint) => {
     throw error;
   }
 };
+
+export const postFromAPI = async (endpoint, data) => {
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_FRONT_END_URL}/${endpoint}`,
+      {
+        method: "POST",
+        headers: {
+          "ngrok-skip-browser-warning": "true", // Add this header to skip the warning page
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      }
+    );
+
+    const result = await response.json();
+    console.log("API response:", result);
+    return result;
+  } catch (error) {
+    console.error("Error posting data:", error);
+    throw error;
+  }
+};
+
+export const deleteFromAPI = async (endpoint) => {
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_FRONT_END_URL}/${endpoint}`,
+      {
+        method: "DELETE",
+        headers: {
+          "ngrok-skip-browser-warning": "true", // Add this header to skip the warning page
+        },
+      }
+    );
+
+    const result = await response.json();
+    console.log("API response:", result);
+    return result;
+  } catch (error) {
+    console.error("Error deleting data:", error);
+    throw error;
+  }
+};
