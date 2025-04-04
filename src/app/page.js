@@ -163,8 +163,7 @@ const OracleTaskManager = () => {
       if (savedTasks) {
         setTasks(JSON.parse(savedTasks));
       }
-      const userData = window.TelegramWebApp.initDataUnsafe;
-      setUser(userData);
+
       fetchData();
     }
   }, []);
