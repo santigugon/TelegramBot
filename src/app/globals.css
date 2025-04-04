@@ -1,26 +1,331 @@
+/* @import url("tailwindcss/dist/tailwind.min.css"); */
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-primary: #c74634; /* Oracle Red */
+  --color-secondary: #3a4a63; /* Dark Blue */
+  --color-accent: #00758f; /* Oracle Teal */
+  --color-light: #f7f9fb;
+  --color-dark: #1a1f36;
+  --color-success: #1f7b4d; /* Green */
+  --color-warning: #f7a700; /* Amber */
+  --color-gray: #6b7280;
+  --color-light-gray: #e5e7eb;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Oracle Sans", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--color-dark);
+  background-color: var(--color-light);
+}
+
+body.dark-theme {
+  color: var(--color-light);
+  background-color: var(--color-dark);
+}
+
+.dark-theme .task-card,
+.dark-theme .module-card,
+.dark-theme .task-form,
+.dark-theme input,
+.dark-theme select {
+  background-color: #2a3042;
+  color: var(--color-light);
+  border-color: #3a4a63;
+}
+
+.oracle-task-manager {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.app-header {
+  padding: 16px;
+  background-color: white;
+  border-bottom: 1px solid var(--color-light-gray);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dark-theme .app-header {
+  background-color: #1a1f36;
+  border-bottom-color: #3a4a63;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+.logo-image {
+  height: 100px;
+  width: auto;
+}
+
+.app-content {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.app-nav {
+  display: flex;
+  justify-content: space-around;
+  padding: 12px;
+  background-color: white;
+  border-top: 1px solid var(--color-light-gray);
+}
+
+.dark-theme .app-nav {
+  background-color: #1a1f36;
+  border-top-color: #3a4a63;
+}
+
+.nav-button {
+  background: none;
+  border: none;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-gray);
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.nav-button.active {
+  color: var(--color-primary);
+  background-color: rgba(199, 70, 52, 0.1);
+}
+
+.dark-theme .nav-button.active {
+  background-color: rgba(199, 70, 52, 0.2);
+}
+
+.button {
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  font-size: 14px;
+}
+
+.button.primary {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.button.secondary {
+  background-color: transparent;
+  border: 1px solid var(--color-secondary);
+  color: var(--color-secondary);
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.icon-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+}
+
+.task-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--color-light-gray);
+}
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.task-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.task-details {
+  font-size: 14px;
+}
+
+.task-module {
+  margin-bottom: 12px;
+}
+
+.label {
+  font-weight: 500;
+  margin-right: 4px;
+  color: var(--color-gray);
+}
+
+.task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.team-badge,
+.status-badge,
+.priority-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.team-badge {
+  color: white;
+}
+
+.filters {
+  margin-bottom: 24px;
+}
+
+.filter-section {
+  margin-bottom: 16px;
+}
+
+.filter-section h3 {
+  font-size: 14px;
+  margin-bottom: 8px;
+  color: var(--color-gray);
+}
+
+.team-filters,
+.module-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.team-filter,
+.module-filter {
+  background: none;
+  border: 1px solid var(--color-light-gray);
+  border-radius: 16px;
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.team-filter.active,
+.module-filter.active {
+  background-color: var(--color-secondary);
+  color: white;
+  border-color: var(--color-secondary);
+}
+
+.tasks-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 24px;
+  color: var(--color-gray);
+}
+
+.task-form,
+.module-view {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.form-title {
+  margin-bottom: 20px;
+  color: var(--color-secondary);
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--color-secondary);
+}
+
+input,
+select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--color-light-gray);
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.module-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 1px solid var(--color-light-gray);
+}
+
+.module-stats {
+  display: flex;
+  justify-content: space-between;
+  margin: 16px 0;
+}
+
+.stat {
+  text-align: center;
+}
+
+.stat-value {
+  display: block;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-secondary);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--color-gray);
 }

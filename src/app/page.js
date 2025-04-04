@@ -1,8 +1,14 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Script from "next/script";
+import "./globals.css";
+import { getModules } from "@/app/data/modules";
+import { getTasks } from "@/app/data/task";
+import { getTeams } from "@/app/data/teams";
+import OracleLoader from "@/app/loader";
 
 // Oracle color palette
+
 const colors = {
   primary: "#C74634", // Oracle Red
   secondary: "#3A4A63", // Dark Blue
@@ -21,57 +27,19 @@ const teams = [
   { id: 2, name: "Backend", color: colors.secondary },
   { id: 3, name: "DevOps", color: colors.accent },
   { id: 4, name: "QA", color: "#7D3C98" }, // Purple
-  { id: 5, name: "Design", color: "#2E86C1" }, // Blue
-];
-
-// Module definitions (sprints/features)
-const modules = [
-  { id: 1, name: "Sprint 1: Core API" },
-  { id: 2, name: "Sprint 2: User Authentication" },
-  { id: 3, name: "Feature: Cloud Integration" },
-  { id: 4, name: "Feature: Performance Optimization" },
-];
-
-// Initial dummy tasks
-const initialTasks = [
-  {
-    id: 1,
-    title: "Setup API endpoints",
-    moduleId: 1,
-    teamId: 2,
-    status: "In Progress",
-    priority: "High",
-  },
-  {
-    id: 2,
-    title: "Design login screen",
-    moduleId: 2,
-    teamId: 5,
-    status: "To Do",
-    priority: "Medium",
-  },
-  {
-    id: 3,
-    title: "Configure CI/CD pipeline",
-    moduleId: 1,
-    teamId: 3,
-    status: "Done",
-    priority: "High",
-  },
-  {
-    id: 4,
-    title: "Implement JWT auth",
-    moduleId: 2,
-    teamId: 2,
-    status: "To Do",
-    priority: "High",
-  },
+  { id: 24, name: "Design", color: "#2E86C1" }, // Blue
 ];
 
 const OracleTaskManager = () => {
+  // GENERAL DATA
+  const [modules, setModules] = useState([]);
+  const [initialTasks, setInitialTasks] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+
   const [tele, setTele] = useState(null);
   const [user, setUser] = useState(null);
-  const [tasks, setTasks] = useState(initialTasks);
+  const [tasks, setTasks] = useState([]);
   const [activeTeamId, setActiveTeamId] = useState(null);
   const [activeModuleId, setActiveModuleId] = useState(null);
   const [view, setView] = useState("tasks"); // "tasks", "newTask", "editTask", "deleteTask", "moduleView"
@@ -83,6 +51,24 @@ const OracleTaskManager = () => {
     status: "To Do",
     priority: "Medium",
   });
+  const [teams, setTeams] = useState([]);
+
+  const [data, setData] = useState(null);
+
+  const fetchData = async () => {
+    const fetchedModules = await getModules();
+    setModules(fetchedModules);
+    console.log("Fetched modules:", modules);
+
+    const fetchedTasks = await getTasks();
+    setTasks(fetchedTasks);
+
+    const fetchedTeams = await getTeams();
+    setTeams(fetchedTeams);
+
+    console.log("loading of");
+    setLoading(false);
+  };
 
   useEffect(() => {
     // Initialize Telegram WebApp
@@ -114,6 +100,7 @@ const OracleTaskManager = () => {
       if (savedTasks) {
         setTasks(JSON.parse(savedTasks));
       }
+      fetchData();
     }
   }, []);
 
@@ -210,8 +197,9 @@ const OracleTaskManager = () => {
 
   const getTeamById = (id) => {
     return (
-      teams.find((team) => team.id === id) || {
-        name: "Unknown",
+      // To do
+      teams.find((team) => team.id === 1) || {
+        title: "Unknown",
         color: colors.gray,
       }
     );
@@ -228,7 +216,7 @@ const OracleTaskManager = () => {
       let matches = true;
 
       if (activeTeamId !== null) {
-        matches = matches && task.teamId === activeTeamId;
+        matches = matches; //&& task.teamId === activeTeamId; TO DO
       }
 
       if (activeModuleId !== null) {
@@ -240,15 +228,14 @@ const OracleTaskManager = () => {
   };
 
   const getPriorityColor = (priority) => {
-    switch (priority) {
-      case "High":
-        return colors.primary;
-      case "Medium":
-        return colors.warning;
-      case "Low":
-        return colors.accent;
-      default:
-        return colors.gray;
+    if (priority >= 7) {
+      return colors.primary;
+    } else if (priority >= 4 && priority < 7) {
+      return colors.warning;
+    } else if (priority < 3) {
+      return colors.accent;
+    } else {
+      return colors.gray;
     }
   };
 
@@ -258,7 +245,7 @@ const OracleTaskManager = () => {
         return { backgroundColor: colors.lightGray, color: colors.dark };
       case "In Progress":
         return { backgroundColor: colors.warning, color: colors.dark };
-      case "Done":
+      case true:
         return { backgroundColor: colors.success, color: colors.light };
       default:
         return { backgroundColor: colors.lightGray, color: colors.dark };
@@ -297,7 +284,7 @@ const OracleTaskManager = () => {
           >
             {modules.map((module) => (
               <option key={module.id} value={module.id}>
-                {module.name}
+                {module.title}
               </option>
             ))}
           </select>
@@ -359,6 +346,8 @@ const OracleTaskManager = () => {
             {isEditing ? "Update Task" : "Create Task"}
           </button>
         </div>
+        <h1>Data from Oracle Database:</h1>
+        <pre>{JSON.stringify(data, null, 2)}</pre>
       </div>
     );
   };
@@ -425,7 +414,7 @@ const OracleTaskManager = () => {
                     )
                   }
                 >
-                  {module.name}
+                  {module.title}
                 </button>
               ))}
             </div>
@@ -436,7 +425,7 @@ const OracleTaskManager = () => {
           <h2>
             {activeTeamId !== null && `${getTeamById(activeTeamId).name} `}
             {activeModuleId !== null &&
-              `${getModuleById(activeModuleId).name} `}
+              `${getModuleById(activeModuleId).title} `}
             Tasks ({filteredTasks.length})
           </h2>
           <button className="button primary" onClick={() => setView("newTask")}>
@@ -475,7 +464,7 @@ const OracleTaskManager = () => {
               <div className="task-details">
                 <div className="task-module">
                   <span className="label">Module:</span>
-                  <span>{getModuleById(task.moduleId).name}</span>
+                  <span>{getModuleById(task.moduleId).title}</span>
                 </div>
 
                 <div className="task-meta">
@@ -488,20 +477,22 @@ const OracleTaskManager = () => {
 
                   <span
                     className="status-badge"
-                    style={getStatusBadgeStyle(task.status)}
+                    style={getStatusBadgeStyle(task.done)}
                   >
-                    {task.status}
+                    {task.done ? "Done" : "To do"}
                   </span>
 
                   <span
                     className="priority-badge"
                     style={{
                       backgroundColor: "transparent",
-                      color: getPriorityColor(task.priority),
-                      border: `1px solid ${getPriorityColor(task.priority)}`,
+                      color: getPriorityColor(task.story_Points),
+                      border: `1px solid ${getPriorityColor(
+                        task.story_Points
+                      )}`,
                     }}
                   >
-                    {task.priority} Priority
+                    {task.story_Points} Story points
                   </span>
                 </div>
               </div>
@@ -516,6 +507,7 @@ const OracleTaskManager = () => {
     // Group tasks by module
     const tasksByModule = {};
     modules.forEach((module) => {
+      console.log("Module:", module);
       tasksByModule[module.id] = tasks.filter(
         (task) => task.moduleId === module.id
       );
@@ -527,7 +519,7 @@ const OracleTaskManager = () => {
 
         {modules.map((module) => (
           <div key={module.id} className="module-card">
-            <h3>{module.name}</h3>
+            <h3>{module.title}</h3>
             <div className="module-stats">
               <div className="stat">
                 <span className="stat-value">
@@ -538,8 +530,8 @@ const OracleTaskManager = () => {
               <div className="stat">
                 <span className="stat-value">
                   {
-                    tasksByModule[module.id].filter((t) => t.status === "Done")
-                      .length
+                    // TO DO
+                    tasksByModule[module.id].filter((t) => t.done).length
                   }
                 </span>
                 <span className="stat-label">Completed</span>
@@ -547,8 +539,8 @@ const OracleTaskManager = () => {
               <div className="stat">
                 <span className="stat-value">
                   {Math.round(
-                    (tasksByModule[module.id].filter((t) => t.status === "Done")
-                      .length /
+                    // TO DO
+                    (tasksByModule[module.id].filter((t) => t.done).length /
                       (tasksByModule[module.id].length || 1)) *
                       100
                   )}
@@ -592,364 +584,47 @@ const OracleTaskManager = () => {
         src="https://telegram.org/js/telegram-web-app.js"
         strategy="beforeInteractive"
       />
-      <div className="oracle-task-manager">
-        <header className="app-header">
-          <div className="logo">
-            <svg viewBox="0 0 100 20" width="120">
-              <text
-                x="0"
-                y="15"
-                fill={colors.primary}
-                fontSize="16"
-                fontWeight="bold"
-              >
-                ORACLE
-              </text>
-            </svg>
-            <span>Task Manager</span>
-          </div>
-        </header>
+      {loading ? (
+        <OracleLoader />
+      ) : (
+        <div className="oracle-task-manager">
+          <header className="app-header">
+            <div className="logo">
+              <img
+                src="https://1000logos.net/wp-content/uploads/2017/04/Oracle-Logo-1.png"
+                alt="Oracle Logo"
+                className="logo-image"
+              />
+            </div>
+          </header>
 
-        <main className="app-content">{renderContent()}</main>
-
-        <nav className="app-nav">
-          <button
-            className={`nav-button ${view === "tasks" ? "active" : ""}`}
-            onClick={() => setView("tasks")}
-          >
-            Tasks
-          </button>
-          <button
-            className={`nav-button ${view === "moduleView" ? "active" : ""}`}
-            onClick={() => setView("moduleView")}
-          >
-            Modules
-          </button>
-          <button
-            className={`nav-button ${view === "newTask" ? "active" : ""}`}
-            onClick={() => setView("newTask")}
-          >
-            Add Task
-          </button>
-        </nav>
-
-        <style jsx global>{`
-          * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-          }
-
-          body {
-            font-family: "Oracle Sans", -apple-system, BlinkMacSystemFont,
-              "Segoe UI", Roboto, sans-serif;
-            font-size: 16px;
-            line-height: 1.5;
-            color: ${colors.dark};
-            background-color: ${colors.light};
-          }
-
-          body.dark-theme {
-            color: ${colors.light};
-            background-color: ${colors.dark};
-          }
-
-          .dark-theme .task-card,
-          .dark-theme .module-card,
-          .dark-theme .task-form,
-          .dark-theme input,
-          .dark-theme select {
-            background-color: #2a3042;
-            color: ${colors.light};
-            border-color: #3a4a63;
-          }
-
-          .oracle-task-manager {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            max-width: 800px;
-            margin: 0 auto;
-          }
-
-          .app-header {
-            padding: 16px;
-            background-color: white;
-            border-bottom: 1px solid ${colors.lightGray};
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-          }
-
-          .dark-theme .app-header {
-            background-color: #1a1f36;
-            border-bottom-color: #3a4a63;
-          }
-
-          .logo {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 600;
-          }
-
-          .app-content {
-            flex: 1;
-            padding: 16px;
-            overflow-y: auto;
-          }
-
-          .app-nav {
-            display: flex;
-            justify-content: space-around;
-            padding: 12px;
-            background-color: white;
-            border-top: 1px solid ${colors.lightGray};
-          }
-
-          .dark-theme .app-nav {
-            background-color: #1a1f36;
-            border-top-color: #3a4a63;
-          }
-
-          .nav-button {
-            background: none;
-            border: none;
-            padding: 8px 16px;
-            font-size: 14px;
-            font-weight: 500;
-            color: ${colors.gray};
-            cursor: pointer;
-            border-radius: 4px;
-          }
-
-          .nav-button.active {
-            color: ${colors.primary};
-            background-color: rgba(199, 70, 52, 0.1);
-          }
-
-          .dark-theme .nav-button.active {
-            background-color: rgba(199, 70, 52, 0.2);
-          }
-
-          .button {
-            padding: 8px 16px;
-            border-radius: 4px;
-            font-weight: 500;
-            cursor: pointer;
-            border: none;
-            font-size: 14px;
-          }
-
-          .button.primary {
-            background-color: ${colors.primary};
-            color: white;
-          }
-
-          .button.secondary {
-            background-color: transparent;
-            border: 1px solid ${colors.secondary};
-            color: ${colors.secondary};
-          }
-
-          .button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-          }
-
-          .icon-button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            padding: 4px;
-          }
-
-          .task-card {
-            background-color: white;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 16px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            border: 1px solid ${colors.lightGray};
-          }
-
-          .task-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 12px;
-          }
-
-          .task-actions {
-            display: flex;
-            gap: 8px;
-          }
-
-          .task-details {
-            font-size: 14px;
-          }
-
-          .task-module {
-            margin-bottom: 12px;
-          }
-
-          .label {
-            font-weight: 500;
-            margin-right: 4px;
-            color: ${colors.gray};
-          }
-
-          .task-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-          }
-
-          .team-badge,
-          .status-badge,
-          .priority-badge {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 500;
-          }
-
-          .team-badge {
-            color: white;
-          }
-
-          .filters {
-            margin-bottom: 24px;
-          }
-
-          .filter-section {
-            margin-bottom: 16px;
-          }
-
-          .filter-section h3 {
-            font-size: 14px;
-            margin-bottom: 8px;
-            color: ${colors.gray};
-          }
-
-          .team-filters,
-          .module-filters {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-          }
-
-          .team-filter,
-          .module-filter {
-            background: none;
-            border: 1px solid ${colors.lightGray};
-            border-radius: 16px;
-            padding: 4px 12px;
-            font-size: 12px;
-            cursor: pointer;
-          }
-
-          .team-filter.active,
-          .module-filter.active {
-            background-color: ${colors.secondary};
-            color: white;
-            border-color: ${colors.secondary};
-          }
-
-          .tasks-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-          }
-
-          .empty-state {
-            text-align: center;
-            padding: 24px;
-            color: ${colors.gray};
-          }
-
-          .task-form,
-          .module-view {
-            background-color: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-          }
-
-          .form-title {
-            margin-bottom: 20px;
-            color: ${colors.secondary};
-          }
-
-          .form-group {
-            margin-bottom: 16px;
-          }
-
-          .form-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 500;
-            font-size: 14px;
-            color: ${colors.secondary};
-          }
-
-          input,
-          select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid ${colors.lightGray};
-            border-radius: 4px;
-            font-size: 14px;
-          }
-
-          input:focus,
-          select:focus {
-            outline: none;
-            border-color: ${colors.accent};
-          }
-
-          .form-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            margin-top: 24px;
-          }
-
-          .module-card {
-            background-color: white;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 16px;
-            border: 1px solid ${colors.lightGray};
-          }
-
-          .module-stats {
-            display: flex;
-            justify-content: space-between;
-            margin: 16px 0;
-          }
-
-          .stat {
-            text-align: center;
-          }
-
-          .stat-value {
-            display: block;
-            font-size: 20px;
-            font-weight: 600;
-            color: ${colors.secondary};
-          }
-
-          .stat-label {
-            font-size: 12px;
-            color: ${colors.gray};
-          }
-        `}</style>
-      </div>
+          <main className="app-content">{renderContent()}</main>
+          <nav className="app-nav">
+            <button
+              className={`nav-button ${view === "tasks" ? "active" : ""}`}
+              onClick={() => setView("tasks")}
+            >
+              Tasks
+            </button>
+            <button
+              className={`nav-button ${view === "moduleView" ? "active" : ""}`}
+              onClick={() => setView("moduleView")}
+            >
+              Modules
+            </button>
+            <button
+              className={`nav-button ${view === "newTask" ? "active" : ""}`}
+              onClick={() => setView("newTask")}
+            >
+              Add Task
+            </button>
+          </nav>
+        </div>
+      )}
     </>
   );
 };
+
+// CallDb();
 
 export default OracleTaskManager;
