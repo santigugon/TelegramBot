@@ -777,7 +777,9 @@ const OracleTaskManager = () => {
           <main className="app-content">
             <div className="flex flex-col">
               <div className="user-info">
-                <h2>Welcome: {user && JSON.stringify(user, null, 2)}</h2>
+                <h2>
+                  Welcome: {user && JSON.stringify(user, null, 2).first_name}
+                </h2>
               </div>
               {renderContent()}
             </div>
