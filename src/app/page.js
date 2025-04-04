@@ -199,13 +199,13 @@ const OracleTaskManager = () => {
     setView("tasks");
 
     // Show success message via Telegram's native UI
-    if (tele) {
-      tele.showPopup({
-        title: "Task Created",
-        message: `Task "${taskToAdd.title}" has been created successfully.`,
-        buttons: [{ type: "ok" }],
-      });
-    }
+    // if (tele) {
+    //   tele.showPopup({
+    //     title: "Task Created",
+    //     message: `Task "${taskToAdd.title}" has been created successfully.`,
+    //     buttons: [{ type: "ok" }],
+    //   });
+    // }
   };
 
   const handleUpdateTask = async () => {
@@ -325,9 +325,10 @@ const OracleTaskManager = () => {
     );
   };
 
-  const renderTaskForm = ({ isEditing = false }) => {
+  const renderTaskForm = (isEditing = false) => {
     const formTask = isEditing ? editingTask : newTask;
     const setFormTask = isEditing ? setEditingTask : setNewTask;
+    console.log("formTask", isEditing);
 
     return (
       <div className="bg-white p-20 rounded-lg  padding-20 border-rad-10 gap-5 flex flex-col">
@@ -601,6 +602,7 @@ const OracleTaskManager = () => {
                   <button
                     className="icon-button edit"
                     onClick={() => {
+                      console.log("Editing task:", task);
                       setEditingTask(task);
                       setView("editTask");
                     }}
