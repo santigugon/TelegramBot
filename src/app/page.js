@@ -102,6 +102,12 @@ const OracleTaskManager = () => {
 
   const [tele, setTele] = useState(null);
 
+  const [showTimeModal, setShowTimeModal] = useState(false);
+
+  const [completingTaskId, setCompletingTaskId] = useState(1);
+  const [actualTime, setActualTime] = useState(0);
+  const [phoneNumber, setPhoneNumber] = useState(0);
+
   const [tasks, setTasks] = useState([]);
   const [activeTeamId, setActiveTeamId] = useState(null);
   const [activeModuleId, setActiveModuleId] = useState(null);
@@ -152,6 +158,13 @@ const OracleTaskManager = () => {
       // Set Telegram header color to match Oracle branding
       webApp.setHeaderColor(colors.primary);
       webApp.setBackgroundColor(colors.light);
+
+      //Get the phone number
+      const urlParams = new URLSearchParams(window.location.search);
+      const phone = urlParams.get("phone");
+      if (phone) {
+        setPhoneNumber(phone);
+      }
 
       // Get user data
       if (webApp.initDataUnsafe?.user) {
@@ -248,18 +261,37 @@ const OracleTaskManager = () => {
     }
   };
 
-  const handleTaskCompletion = async (taskId) => {
+  const handleTaskCompletion = async (taskId, actualTimeSpent) => {
+    const taskToUpdate = tasks.find((task) => task.id === taskId);
+    const updatedTask = {
+      ...taskToUpdate,
+      done: !taskToUpdate.done,
+    };
+
+    // Only update actual time if provided (when marking as complete)
+    if (actualTimeSpent !== null) {
+      updatedTask.actualTime = actualTimeSpent;
+    }
+
     const updatedTasks = tasks.map((task) =>
-      task.id === taskId ? { ...task, done: !task.done } : task
+      task.id === taskId ? updatedTask : task
     );
-    const taskToUpdate = updatedTasks.find((task) => task.id === taskId);
-    const result = await putTask(taskId, taskToUpdate);
+
+    const result = await putTask(taskId, updatedTask);
     console.log("result of completing task", result);
     if (result) {
       setTasks(updatedTasks);
+
+      // Show success message with time info when marking as complete
+      if (updatedTask.done && tele) {
+        tele.showPopup({
+          title: "Task Marked as Complete",
+          message: `Task completion recorded. Actual time: ${updatedTask.actualTime} hours.`,
+          buttons: [{ type: "ok" }],
+        });
+      }
     }
     setEditingTask(null);
-    // Show success message
   };
 
   const getTeamById = (id) => {
@@ -276,6 +308,25 @@ const OracleTaskManager = () => {
     return (
       modules.find((module) => module.id === id) || { name: "Unknown Module" }
     );
+  };
+
+  const handleTaskCheckboxClick = (taskId) => {
+    const task = tasks.find((t) => t.id === taskId);
+    // Only show time modal when marking a task as complete
+    if (!task.done) {
+      setCompletingTaskId(taskId);
+      setActualTime(task.estimatedTime || 0); // Default to estimated time
+      setShowTimeModal(true);
+    } else {
+      // If unchecking, just update without asking for time
+      handleTaskCompletion(taskId, null);
+    }
+  };
+
+  const handleTimeModalSubmit = () => {
+    handleTaskCompletion(completingTaskId, actualTime);
+    setShowTimeModal(false);
+    setCompletingTaskId(null);
   };
 
   const getFilteredTasks = () => {
@@ -330,7 +381,6 @@ const OracleTaskManager = () => {
   const renderTaskForm = (isEditing = false) => {
     const formTask = isEditing ? editingTask : newTask;
     const setFormTask = isEditing ? setEditingTask : setNewTask;
-    console.log("formTask", isEditing);
 
     return (
       <div className="bg-white p-20 rounded-lg  padding-20 border-rad-10 gap-5 flex flex-col">
@@ -483,6 +533,7 @@ const OracleTaskManager = () => {
                 }
                 className="fitted-checkbox"
               />
+
               <span className="ml-2 text-sm text-gray-700">
                 Mark as completed
               </span>
@@ -663,14 +714,21 @@ const OracleTaskManager = () => {
                     </span>
                   </div>
                 </div>
-                <input
-                  type="checkbox"
-                  className="fitted-checkbox"
-                  checked={task.done}
-                  onChange={() => {
-                    handleTaskCompletion(task.id);
-                  }}
-                ></input>
+                <div className="flex flex-col justify-center items-end">
+                  <input
+                    type="checkbox"
+                    className="fitted-checkbox"
+                    checked={task.done}
+                    onChange={() => {
+                      handleTaskCheckboxClick(task.id);
+                    }}
+                  ></input>
+                  {task.actualTime && (
+                    <label className="checkbox-label">
+                      Time taken: {task.actualTime || 0} hours
+                    </label>
+                  )}
+                </div>
               </div>
             </div>
           ))
@@ -775,11 +833,64 @@ const OracleTaskManager = () => {
           </header>
 
           <main className="app-content">
+            {/* Time tracking modal */}
+            {/* MODAL  */}
+            {showTimeModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 padding-20">
+                <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full padding-20">
+                  <h3 className="text-xl font-semibold mb-4">
+                    Task Completion Time
+                  </h3>
+                  <p className="mb-4">
+                    How many hours did it take to complete this task?
+                  </p>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Actual Time (hours)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.5"
+                      value={actualTime}
+                      onChange={(e) => setActualTime(Number(e.target.value))}
+                      className="w-full p-2 border border-gray-300 rounded-md"
+                    />
+                    <div className="text-sm text-gray-500 mt-1">
+                      Estimated time was:{" "}
+                      {tasks.find((t) => t.id === completingTaskId)
+                        ?.estimatedTime || 0}{" "}
+                      hours
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end space-x-3">
+                    <button
+                      className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 button"
+                      onClick={() => {
+                        setShowTimeModal(false);
+                        setCompletingTaskId(null);
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary primary button"
+                      style={{ backgroundColor: colors.primary }}
+                      onClick={handleTimeModalSubmit}
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* MAIN CONTENT */}
             <div className="flex flex-col">
               <div className="user-info">
-                <h2>
-                  Welcome: {user && JSON.stringify(user, null, 2).first_name}
-                </h2>
+                <h2>Welcome: {phoneNumber}</h2>
               </div>
               {renderContent()}
             </div>

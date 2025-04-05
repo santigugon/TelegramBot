@@ -66,6 +66,7 @@ export const deleteFromAPI = async (endpoint) => {
 export const putFromAPI = async (endpoint, data) => {
   try {
     console.log("PUT request endpoint:", endpoint);
+    console.log("PUT request data:", data);
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_FRONT_END_URL}/${endpoint}`,
       {
