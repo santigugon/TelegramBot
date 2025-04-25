@@ -224,8 +224,8 @@ const EmployeeTaskModal = ({ employee, modules, onClose }) => {
     );
   });
 
-  // Calculate overall progress
-  const totalTasks = employee.tasksCompleted.length;
+  // Calculate overall progress based on completed tasks vs total tasks
+  const totalTasks = employee.totalNumberTasks;
   const completedTasks = employee.tasksCompleted.filter(
     (task) => task.done
   ).length;
@@ -362,13 +362,11 @@ const EmployeeTaskModal = ({ employee, modules, onClose }) => {
 
 // Team Member Card Component
 const TeamMemberCard = ({ member, modules, onShowDetails }) => {
-  // Calculate completion percentage (if there are tasks)
+  // Calculate completion percentage based on completed tasks vs total tasks
+  const totalTasks = member.totalNumberTasks;
   const completionPercentage =
-    member.numberTasksCompleted > 0
-      ? Math.round(
-          (member.numberTasksCompleted / (member.numberTasksCompleted + 5)) *
-            100
-        )
+    totalTasks > 0
+      ? Math.round((member.numberTasksCompleted / totalTasks) * 100)
       : 0;
 
   return (
@@ -398,7 +396,7 @@ const TeamMemberCard = ({ member, modules, onShowDetails }) => {
         <div className="bg-gray-50 p-4 rounded-lg">
           <div className="text-sm text-gray-500 mb-1">Hours Worked</div>
           <div className="text-xl font-semibold text-black">
-            {member.hoursWorked}
+            {member.numberHoursWorked}
           </div>
         </div>
       </div>
