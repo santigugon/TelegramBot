@@ -350,3 +350,138 @@ select:focus {
   margin-left: 3px !important;
   border: #c745343f 1px solid;
 }
+
+/* Recommendation Component Styles */
+.recommendation-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--color-light-gray);
+  border-left: 4px solid var(--color-accent);
+}
+
+.dark-theme .recommendation-card {
+  background-color: #2a3042;
+  border-color: #3a4a63;
+}
+
+.recommendation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.recommendation-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-secondary);
+}
+
+.recommendation-badge {
+  background-color: var(--color-accent);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.recommendation-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.recommendation-task h4 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.recommendation-task p {
+  font-size: 14px;
+  color: var(--color-gray);
+}
+
+.recommendation-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.recommendation-detail {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.recommendation-detail .label {
+  font-weight: 500;
+  color: var(--color-gray);
+}
+
+.recommendation-detail .value {
+  font-weight: 500;
+}
+
+.priority-badge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.priority-high {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.priority-medium {
+  background-color: var(--color-warning);
+  color: var(--color-dark);
+}
+
+.priority-low {
+  background-color: var(--color-success);
+  color: white;
+}
+
+.recommendation-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-light-gray);
+  border-top: 2px solid var(--color-accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.error-message {
+  color: var(--color-primary);
+  font-size: 14px;
+}
+
+.recommendation-card.loading,
+.recommendation-card.error,
+.recommendation-card.empty {
+  opacity: 0.8;
+}

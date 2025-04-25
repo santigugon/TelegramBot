@@ -7,6 +7,7 @@ import { getTasks, postTask, deleteTask, putTask } from "@/app/data/task";
 import { getTeams } from "@/app/data/teams";
 import OracleLoader from "@/app/loader";
 import KPIView from "./view/Kpi";
+import Recommendation from "./view/Recommendation";
 // Oracle color palette
 
 // Progress Pie Chart Component
@@ -711,6 +712,9 @@ const OracleTaskManager = () => {
             </div>
           </div>
         </div>
+
+        {/* AI Recommendation Component */}
+        <Recommendation />
 
         <div className="tasks-header">
           <h2>
