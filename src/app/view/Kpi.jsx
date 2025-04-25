@@ -369,6 +369,14 @@ const TeamMemberCard = ({ member, modules, onShowDetails }) => {
       ? Math.round((member.numberTasksCompleted / totalTasks) * 100)
       : 0;
 
+  // Calculate average time per task
+  const avgTimePerTask =
+    member.numberTasksCompleted > 0
+      ? Math.round(
+          (member.numberHoursWorked / member.numberTasksCompleted) * 10
+        ) / 10
+      : 0;
+
   return (
     <div
       className="bg-white p-6 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-shadow"
@@ -398,6 +406,13 @@ const TeamMemberCard = ({ member, modules, onShowDetails }) => {
           <div className="text-xl font-semibold text-black">
             {member.numberHoursWorked}
           </div>
+        </div>
+      </div>
+
+      <div className="mt-4 bg-gray-50 p-4 rounded-lg">
+        <div className="text-sm text-gray-500 mb-1">Avg. Hours per Task</div>
+        <div className="text-xl font-semibold text-black">
+          {avgTimePerTask} hrs
         </div>
       </div>
 
