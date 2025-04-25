@@ -6,6 +6,7 @@ import { getModules } from "@/app/data/modules";
 import { getTasks, postTask, deleteTask, putTask } from "@/app/data/task";
 import { getTeams } from "@/app/data/teams";
 import OracleLoader from "@/app/loader";
+import renderKPIview from "./view/Kpi";
 // Oracle color palette
 
 const users = [
@@ -103,6 +104,8 @@ const OracleTaskManager = () => {
   const [tele, setTele] = useState(null);
 
   const [showTimeModal, setShowTimeModal] = useState(false);
+  const [showGraphModal, setShowGraphModal] = useState(false);
+  const [selectedModuleForGraph, setSelectedModuleForGraph] = useState(null);
 
   const [completingTaskId, setCompletingTaskId] = useState(1);
   const [actualTime, setActualTime] = useState(0);
@@ -772,28 +775,122 @@ const OracleTaskManager = () => {
               </div>
               <div className="stat">
                 <span className="stat-value">
-                  {Math.round(
-                    // TO DO
-                    (tasksByModule[module.id].filter((t) => t.done).length /
-                      (tasksByModule[module.id].length || 1)) *
-                      100
-                  )}
+                  {tasksByModule[module.id].length > 0
+                    ? Math.round(
+                        tasksByModule[module.id].reduce((total, task) => {
+                          const timeSpent = task.done ? task.actualTime : 0;
+
+                          return total + timeSpent;
+                        }, 0)
+                      )
+                    : 0}
+                </span>
+                <span className="stat-label">Hours spent</span>
+              </div>
+              <div className="stat">
+                <span className="stat-value">
+                  {tasksByModule[module.id].length > 0
+                    ? Math.round(
+                        (tasksByModule[module.id].filter((t) => t.done).length /
+                          tasksByModule[module.id].length) *
+                          100
+                      )
+                    : 0}
                   %
                 </span>
                 <span className="stat-label">Progress</span>
               </div>
             </div>
-            <button
-              className="button secondary"
-              onClick={() => {
-                setActiveModuleId(module.id);
-                setView("tasks");
-              }}
-            >
-              View Tasks
-            </button>
+            <div className="module-actions">
+              <button
+                className="button secondary"
+                onClick={() => {
+                  setActiveModuleId(module.id);
+                  setView("tasks");
+                }}
+              >
+                View Tasks
+              </button>
+              <button
+                className="button primary"
+                onClick={() => {
+                  setSelectedModuleForGraph(module);
+                  setShowGraphModal(true);
+                }}
+              >
+                View Graph
+              </button>
+            </div>
           </div>
         ))}
+
+        {/* Graph Modal */}
+        {showGraphModal && selectedModuleForGraph && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowGraphModal(false);
+              }
+            }}
+          >
+            <div className="bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-semibold">
+                  Progress Graph: {selectedModuleForGraph.title}
+                </h3>
+                <button
+                  className="text-gray-500 hover:text-gray-700"
+                  onClick={() => setShowGraphModal(false)}
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="h-64 flex items-end justify-between">
+                {tasksByModule[selectedModuleForGraph.id].map((task, index) => {
+                  const progress = task.done ? 100 : 0;
+                  return (
+                    <div
+                      key={task.id}
+                      className="flex flex-col items-center"
+                      style={{
+                        width: `${
+                          100 / tasksByModule[selectedModuleForGraph.id].length
+                        }%`,
+                      }}
+                    >
+                      <div
+                        className="w-8 bg-primary rounded-t-md"
+                        style={{
+                          height: `${progress}%`,
+                          backgroundColor: task.done
+                            ? colors.success
+                            : colors.lightGray,
+                        }}
+                      ></div>
+                      <div
+                        className="text-xs mt-2 text-center truncate w-full"
+                        title={task.title}
+                      >
+                        {task.title || `Task ${index + 1}`}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mt-4 flex justify-center">
+                <div className="flex items-center mr-4">
+                  <div className="w-4 h-4 bg-success mr-1"></div>
+                  <span>Completed</span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-4 h-4 bg-lightGray mr-1"></div>
+                  <span>Pending</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -806,6 +903,8 @@ const OracleTaskManager = () => {
         return renderTaskForm(true);
       case "moduleView":
         return renderModuleView();
+      case "kpi":
+        return renderKPIview();
       case "tasks":
       default:
         return renderTaskList();
@@ -913,6 +1012,12 @@ const OracleTaskManager = () => {
               onClick={() => setView("newTask")}
             >
               Add Task
+            </button>
+            <button
+              className={`nav-button ${view === "kpi" ? "active" : ""}`}
+              onClick={() => setView("kpi")}
+            >
+              KPI's
             </button>
           </nav>
         </div>
