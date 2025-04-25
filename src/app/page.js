@@ -6,8 +6,54 @@ import { getModules } from "@/app/data/modules";
 import { getTasks, postTask, deleteTask, putTask } from "@/app/data/task";
 import { getTeams } from "@/app/data/teams";
 import OracleLoader from "@/app/loader";
-import renderKPIview from "./view/Kpi";
+import KPIView from "./view/Kpi";
 // Oracle color palette
+
+// Progress Pie Chart Component
+const ProgressPieChart = ({ progress, size = 200, strokeWidth = 20 }) => {
+  // Ensure progress is between 0 and 100
+  const normalizedProgress = Math.min(Math.max(progress, 0), 100);
+
+  // Calculate the SVG parameters
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (normalizedProgress / 100) * circumference;
+
+  return (
+    <div className="flex flex-col items-center">
+      <svg width={size} height={size} className="transform -rotate-90">
+        {/* Background circle */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke={colors.lightGray}
+          strokeWidth={strokeWidth}
+        />
+        {/* Progress circle */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke={colors.success}
+          strokeWidth={strokeWidth}
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+        />
+      </svg>
+      <div
+        className="absolute flex flex-col items-center justify-center"
+        style={{ width: size, height: size }}
+      >
+        <span className="text-3xl font-bold">{normalizedProgress}%</span>
+        <span className="text-sm text-gray-500">Complete</span>
+      </div>
+    </div>
+  );
+};
 
 const users = [
   {
@@ -827,17 +873,17 @@ const OracleTaskManager = () => {
         {/* Graph Modal */}
         {showGraphModal && selectedModuleForGraph && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
             onClick={(e) => {
               if (e.target === e.currentTarget) {
                 setShowGraphModal(false);
               }
             }}
           >
-            <div className="bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full">
-              <div className="flex justify-between items-center mb-4">
+            <div className="bg-white p-8 rounded-lg shadow-lg max-w-2xl w-full">
+              <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-semibold">
-                  Progress Graph: {selectedModuleForGraph.title}
+                  Progress: {selectedModuleForGraph.title}
                 </h3>
                 <button
                   className="text-gray-500 hover:text-gray-700"
@@ -846,46 +892,103 @@ const OracleTaskManager = () => {
                   ✕
                 </button>
               </div>
-              <div className="h-64 flex items-end justify-between">
-                {tasksByModule[selectedModuleForGraph.id].map((task, index) => {
-                  const progress = task.done ? 100 : 0;
+
+              <div className="flex flex-col items-center justify-center p-6">
+                {(() => {
+                  const progress =
+                    tasksByModule[selectedModuleForGraph.id].length > 0
+                      ? Math.round(
+                          (tasksByModule[selectedModuleForGraph.id].filter(
+                            (t) => t.done
+                          ).length /
+                            tasksByModule[selectedModuleForGraph.id].length) *
+                            100
+                        )
+                      : 0;
+
                   return (
-                    <div
-                      key={task.id}
-                      className="flex flex-col items-center"
-                      style={{
-                        width: `${
-                          100 / tasksByModule[selectedModuleForGraph.id].length
-                        }%`,
-                      }}
-                    >
-                      <div
-                        className="w-8 bg-primary rounded-t-md"
-                        style={{
-                          height: `${progress}%`,
-                          backgroundColor: task.done
-                            ? colors.success
-                            : colors.lightGray,
-                        }}
-                      ></div>
-                      <div
-                        className="text-xs mt-2 text-center truncate w-full"
-                        title={task.title}
-                      >
-                        {task.title || `Task ${index + 1}`}
-                      </div>
+                    <div className="relative">
+                      <ProgressPieChart progress={progress} size={250} />
                     </div>
                   );
-                })}
-              </div>
-              <div className="mt-4 flex justify-center">
-                <div className="flex items-center mr-4">
-                  <div className="w-4 h-4 bg-success mr-1"></div>
-                  <span>Completed</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-4 h-4 bg-lightGray mr-1"></div>
-                  <span>Pending</span>
+                })()}
+
+                <div className="mt-10 grid grid-cols-2 gap-6 w-full">
+                  <div className="bg-light p-5 rounded-lg flex-col">
+                    <h4 className="font-semibold mb-3">Task Breakdown</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span>Total Tasks:</span>
+                        <span className="font-medium">
+                          {tasksByModule[selectedModuleForGraph.id].length}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Completed:</span>
+                        <span className="font-medium text-success">
+                          {
+                            tasksByModule[selectedModuleForGraph.id].filter(
+                              (t) => t.done
+                            ).length
+                          }
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Pending:</span>
+                        <span className="font-medium text-warning">
+                          {
+                            tasksByModule[selectedModuleForGraph.id].filter(
+                              (t) => !t.done
+                            ).length
+                          }
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-light p-5 rounded-lg">
+                    <h4 className="font-semibold mb-3">Time Statistics</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span>Hours Spent:</span>
+                        <span className="font-medium">
+                          {tasksByModule[selectedModuleForGraph.id].length > 0
+                            ? Math.round(
+                                tasksByModule[selectedModuleForGraph.id].reduce(
+                                  (total, task) => {
+                                    const timeSpent = task.done
+                                      ? task.actualTime
+                                      : 0;
+                                    return total + timeSpent;
+                                  },
+                                  0
+                                )
+                              )
+                            : 0}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Avg. Time/Task:</span>
+                        <span className="font-medium">
+                          {tasksByModule[selectedModuleForGraph.id].length > 0
+                            ? (
+                                tasksByModule[selectedModuleForGraph.id].reduce(
+                                  (total, task) => {
+                                    const timeSpent = task.done
+                                      ? task.actualTime
+                                      : 0;
+                                    return total + timeSpent;
+                                  },
+                                  0
+                                ) /
+                                tasksByModule[selectedModuleForGraph.id].length
+                              ).toFixed(1)
+                            : 0}{" "}
+                          hrs
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -904,7 +1007,7 @@ const OracleTaskManager = () => {
       case "moduleView":
         return renderModuleView();
       case "kpi":
-        return renderKPIview();
+        return <KPIView />;
       case "tasks":
       default:
         return renderTaskList();
