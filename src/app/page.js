@@ -160,6 +160,7 @@ const OracleTaskManager = () => {
   const [tasks, setTasks] = useState([]);
   const [activeTeamId, setActiveTeamId] = useState(null);
   const [activeModuleId, setActiveModuleId] = useState(null);
+  const [activeEmployeeId, setActiveEmployeeId] = useState(null);
   const [view, setView] = useState("tasks"); // "tasks", "newTask", "editTask", "deleteTask", "moduleView"
   const [editingTask, setEditingTask] = useState(null);
   const [newTask, setNewTask] = useState({
@@ -388,6 +389,10 @@ const OracleTaskManager = () => {
 
       if (activeModuleId !== null) {
         matches = matches && task.moduleId === activeModuleId;
+      }
+
+      if (activeEmployeeId !== null) {
+        matches = matches && task.responsible === activeEmployeeId;
       }
 
       return matches;
@@ -672,6 +677,35 @@ const OracleTaskManager = () => {
                   }
                 >
                   {module.title}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="filter-section">
+            <h3>Filter by Employee</h3>
+            <div className="employee-filters">
+              <button
+                className={`employee-filter ${
+                  activeEmployeeId === null ? "active" : ""
+                }`}
+                onClick={() => setActiveEmployeeId(null)}
+              >
+                All Employees
+              </button>
+              {users.map((user) => (
+                <button
+                  key={user.id}
+                  className={`employee-filter ${
+                    activeEmployeeId === user.id ? "active" : ""
+                  }`}
+                  onClick={() =>
+                    setActiveEmployeeId(
+                      user.id === activeEmployeeId ? null : user.id
+                    )
+                  }
+                >
+                  {user.user.username}
                 </button>
               ))}
             </div>

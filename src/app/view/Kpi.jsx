@@ -48,65 +48,120 @@ const ProgressPieChart = ({ progress, size = 150, strokeWidth = 15 }) => {
   );
 };
 
-// Module Breakdown Component
-const ModuleBreakdown = ({ tasks, modules }) => {
+// Employee Task Modal Component
+const EmployeeTaskModal = ({ employee, modules, onClose }) => {
   // Group tasks by module
   const tasksByModule = {};
   modules.forEach((module) => {
-    tasksByModule[module.id] = tasks.filter(
+    tasksByModule[module.id] = employee.tasksCompleted.filter(
       (task) => task.moduleId === module.id
     );
   });
 
-  // Calculate module stats
-  const moduleStats = Object.keys(tasksByModule).map((moduleId) => {
-    const moduleTasks = tasksByModule[moduleId];
-    const module = modules.find((m) => m.id === parseInt(moduleId)) || {
-      title: `Module ${moduleId}`,
-    };
-
-    return {
-      id: moduleId,
-      title: module.title,
-      taskCount: moduleTasks.length,
-      hoursSpent: moduleTasks.reduce(
-        (total, task) => total + (task.actualTime || 0),
-        0
-      ),
-      storyPoints: moduleTasks.reduce(
-        (total, task) => total + (task.story_Points || 0),
-        0
-      ),
-    };
-  });
+  // Calculate overall progress
+  const totalTasks = employee.tasksCompleted.length;
+  const completedTasks = employee.tasksCompleted.filter(
+    (task) => task.done
+  ).length;
+  const progressPercentage =
+    totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
   return (
-    <div className="mt-4">
-      <h4 className="font-semibold mb-3">Module Breakdown</h4>
-      <div className="space-y-3">
-        {moduleStats.map((stat) => (
-          <div key={stat.id} className="bg-white p-3 rounded-lg shadow-sm">
-            <div className="flex justify-between items-center">
-              <span className="font-medium">{stat.title}</span>
-              <span className="text-sm text-gray-500">
-                {stat.taskCount} tasks
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-lg w-full max-h-[90vh] flex flex-col">
+        <div className="flex justify-between items-center p-5 border-b">
+          <h3 className="text-xl font-semibold text-black">
+            {employee.user.username} - Task Details
+          </h3>
+          <button
+            className="text-gray-500 hover:text-gray-700 p-2"
+            onClick={onClose}
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="overflow-y-auto p-5 flex-1">
+          <div className="flex flex-col items-center justify-center mb-8">
+            <div className="relative">
+              <ProgressPieChart progress={progressPercentage} size={180} />
+            </div>
+            <div className="mt-3 text-center">
+              <span className="text-lg font-medium text-black">
+                {progressPercentage}% Complete
               </span>
             </div>
-            <div className="flex justify-between text-sm mt-1">
-              <span>Hours: {stat.hoursSpent}</span>
-              <span>Story Points: {stat.storyPoints}</span>
+          </div>
+
+          <div className="w-full">
+            <h4 className="font-semibold mb-4 text-lg text-black">
+              Module Breakdown
+            </h4>
+            <div className="space-y-5">
+              {Object.keys(tasksByModule).map((moduleId) => {
+                const moduleTasks = tasksByModule[moduleId];
+                const module = modules.find(
+                  (m) => m.id === parseInt(moduleId)
+                ) || { title: `Module ${moduleId}` };
+
+                if (moduleTasks.length === 0) return null;
+
+                return (
+                  <div
+                    key={moduleId}
+                    className="bg-gray-50 p-4 rounded-lg border border-gray-200 my-10"
+                  >
+                    <div className="flex justify-between items-center mb-3">
+                      <h5 className="font-semibold text-lg text-black">
+                        {module.title}
+                      </h5>
+                      <span className="text-sm bg-primary text-white px-3 py-1 rounded-full">
+                        {moduleTasks.length} tasks
+                      </span>
+                    </div>
+
+                    <div className="space-y-3 mt-4">
+                      {moduleTasks.map((task) => (
+                        <div
+                          key={task.id}
+                          className="bg-white p-4 rounded-md shadow-sm border border-gray-100"
+                        >
+                          <div className="font-medium text-base text-black">
+                            {task.description}
+                          </div>
+                          <div className="flex justify-between text-sm mt-2 text-gray-600">
+                            <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                              Story Points: {task.story_Points}
+                            </span>
+                            <span className="bg-green-50 text-green-700 px-2 py-1 rounded">
+                              Hours: {task.actualTime}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
-        ))}
+        </div>
+
+        <div className="p-5 border-t">
+          <button
+            className="w-full py-3 bg-primary text-white rounded-md hover:bg-opacity-90 transition-colors font-medium"
+            onClick={onClose}
+          >
+            Close
+          </button>
+        </div>
       </div>
     </div>
   );
 };
 
 // Team Member Card Component
-const TeamMemberCard = ({ member, modules }) => {
-  const [showDetails, setShowDetails] = useState(false);
-
+const TeamMemberCard = ({ member, modules, onShowDetails }) => {
   // Calculate completion percentage (if there are tasks)
   const completionPercentage =
     member.numberTasksCompleted > 0
@@ -117,10 +172,15 @@ const TeamMemberCard = ({ member, modules }) => {
       : 0;
 
   return (
-    <div className="bg-white p-5 rounded-lg shadow-md">
+    <div
+      className="bg-white p-5 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-shadow"
+      onClick={() => onShowDetails(member)}
+    >
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="font-semibold text-lg">{member.user.username}</h3>
+          <h3 className="font-semibold text-lg text-black">
+            {member.user.username}
+          </h3>
           <p className="text-sm text-gray-500">{member.role}</p>
         </div>
         <div className="relative">
@@ -131,28 +191,30 @@ const TeamMemberCard = ({ member, modules }) => {
       <div className="mt-4 grid grid-cols-2 gap-4">
         <div className="bg-gray-50 p-3 rounded-lg">
           <div className="text-sm text-gray-500">Tasks Completed</div>
-          <div className="text-xl font-semibold">
+          <div className="text-xl font-semibold text-black">
             {member.numberTasksCompleted}
           </div>
         </div>
         <div className="bg-gray-50 p-3 rounded-lg">
           <div className="text-sm text-gray-500">Hours Worked</div>
-          <div className="text-xl font-semibold">
+          <div className="text-xl font-semibold text-black">
             {member.numberHoursWorked}
           </div>
         </div>
       </div>
 
-      <button
-        className="mt-4 w-full py-2 bg-primary text-white rounded-md hover:bg-opacity-90 transition-colors"
-        onClick={() => setShowDetails(!showDetails)}
-      >
-        {showDetails ? "Hide Details" : "Show Details"}
-      </button>
-
-      {showDetails && (
-        <ModuleBreakdown tasks={member.tasksCompleted} modules={modules} />
-      )}
+      <div className="mt-5 flex justify-center">
+        <button
+          className="py-3 px-6 bg-primary text-white rounded-md hover:bg-opacity-90 transition-colors flex items-center shadow-md"
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent triggering the card click
+            onShowDetails(member);
+          }}
+        >
+          <span className="mr-2 text-xl">👤</span>
+          <span className="font-medium text-black">View Details</span>
+        </button>
+      </div>
     </div>
   );
 };
@@ -163,6 +225,7 @@ function KPIView() {
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -186,6 +249,10 @@ function KPIView() {
 
     fetchData();
   }, []);
+
+  const handleShowEmployeeDetails = (employee) => {
+    setSelectedEmployee(employee);
+  };
 
   if (loading) {
     return (
@@ -218,6 +285,7 @@ function KPIView() {
             key={employee.id}
             member={employee}
             modules={modules}
+            onShowDetails={handleShowEmployeeDetails}
           />
         ))}
       </div>
@@ -249,6 +317,15 @@ function KPIView() {
           </div>
         </div>
       </div>
+
+      {/* Employee Task Modal */}
+      {selectedEmployee && (
+        <EmployeeTaskModal
+          employee={selectedEmployee}
+          modules={modules}
+          onClose={() => setSelectedEmployee(null)}
+        />
+      )}
     </div>
   );
 }

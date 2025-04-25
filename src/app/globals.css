@@ -217,14 +217,16 @@ body.dark-theme {
 }
 
 .team-filters,
-.module-filters {
+.module-filters,
+.employee-filters {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
 .team-filter,
-.module-filter {
+.module-filter,
+.employee-filter {
   background: none;
   border: 1px solid var(--color-light-gray);
   border-radius: 16px;
@@ -234,7 +236,8 @@ body.dark-theme {
 }
 
 .team-filter.active,
-.module-filter.active {
+.module-filter.active,
+.employee-filter.active {
   background-color: var(--color-secondary);
   color: white;
   border-color: var(--color-secondary);
